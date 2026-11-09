@@ -1,0 +1,28 @@
+services:
+  users-service:
+    build: ./users-service
+    ports: ["5001:5001"]
+    networks: [backend]
+
+  products-service:
+    build: ./products-service
+    ports: ["5002:5002"]
+    networks: [backend]
+
+  orders-service:
+    build: ./orders-service
+    ports: ["5003:5003"]
+    environment:
+      USERS_URL: http://users-service:5001
+      PRODUCTS_URL: http://products-service:5002
+    depends_on: [users-service, products-service]
+    networks: [backend]
+
+  frontend:
+    build: ./frontend
+    ports: ["80:80"]
+    depends_on: [users-service, products-service, orders-service]
+    networks: [backend]
+
+networks:
+  backend:

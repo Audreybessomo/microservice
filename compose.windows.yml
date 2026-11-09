@@ -1,0 +1,41 @@
+# Utiliser ce fichier seul : docker-compose -f compose.windows.yml ...
+# Construire d'abord l'image : docker build --isolation=process -f Dockerfile.windows -t mini-boutique:windows .
+x-common: &common
+  image: mini-boutique:windows
+  isolation: process
+  restart: unless-stopped
+  networks: [backend]
+
+services:
+  users-service:
+    <<: *common
+    working_dir: C:/app/users-service
+    command: ["python", "-m", "waitress", "--listen=0.0.0.0:5001", "app:app"]
+
+  products-service:
+    <<: *common
+    working_dir: C:/app/products-service
+    command: ["python", "-m", "waitress", "--listen=0.0.0.0:5002", "app:app"]
+
+  orders-service:
+    <<: *common
+    working_dir: C:/app/orders-service
+    command: ["python", "-m", "waitress", "--listen=0.0.0.0:5003", "app:app"]
+    environment:
+      USERS_URL: http://users-service:5001
+      PRODUCTS_URL: http://products-service:5002
+    depends_on: [users-service, products-service]
+
+  frontend:
+    <<: *common
+    working_dir: C:/app/frontend
+    ports: ["80:80"]
+    environment:
+      USERS_URL: http://users-service:5001
+      PRODUCTS_URL: http://products-service:5002
+      ORDERS_URL: http://orders-service:5003
+    depends_on: [users-service, products-service, orders-service]
+
+networks:
+  backend:
+    driver: nat

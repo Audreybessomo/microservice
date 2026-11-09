@@ -1,0 +1,22 @@
+FROM python:3.13-windowsservercore-ltsc2025
+
+WORKDIR C:/app
+ENV PYTHONUNBUFFERED=1
+
+COPY users-service/requirements.txt requirements-users.txt
+COPY products-service/requirements.txt requirements-products.txt
+COPY orders-service/requirements.txt requirements-orders.txt
+COPY frontend/requirements-windows.txt requirements-frontend.txt
+RUN python -m pip install --no-cache-dir -r requirements-users.txt -r requirements-products.txt -r requirements-orders.txt -r requirements-frontend.txt
+
+COPY users-service/app.py users-service/app.py
+COPY products-service/app.py products-service/app.py
+COPY orders-service/app.py orders-service/app.py
+COPY frontend/server.py frontend/server.py
+COPY frontend/index.html frontend/index.html
+COPY frontend/styles.css frontend/styles.css
+COPY frontend/app.js frontend/app.js
+
+WORKDIR C:/app/frontend
+EXPOSE 80
+CMD ["python", "-m", "waitress", "--listen=0.0.0.0:80", "server:app"]
